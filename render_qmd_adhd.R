@@ -24,13 +24,13 @@ data_location <-
     git_root, "data/adhd_management_data.csv"
   )
 
-qmd_url <- file.path(git_root, "adhd_management.qmd")
+git_root <- "https://raw.githubusercontent.com/susannehempel-lab/adhd_management/refs/heads/main"
+qmd_url  <- glue("{git_root}/adhd_management.qmd")
+data_path <- file.path(getwd(), "your_data_file.RData")
 
-
-# Download the qmd file so Quarto can find it
+# 2. Download the QMD file to a temporary location
 qmd_location <- tempfile(fileext = ".qmd")
 download.file(url = qmd_url, destfile = qmd_location, mode = "wb")
-
 
 
 
@@ -102,8 +102,14 @@ if (subgroup != "") {
 }
 
 
-data_path <- file.path(getwd(), "data.RData")
-save.image(file = data_path)
+my_local_data_path <- file.path(getwd(), "adhd_params.RData")
+save.image(file = my_local_data_path)
+
+output_file <- glue::glue("adhd_management_{subgroup}.html")
+
+
+my_local_data_path <- file.path(getwd(), "adhd_params.RData")
+save.image(file = my_local_data_path)
 
 output_file <- glue::glue("adhd_management_{subgroup}.html")
 
@@ -112,7 +118,7 @@ if (comparator_vs_int) {
 }
 
 quarto::quarto_render(
-  qmd_location, 
+  input = qmd_location, 
   execute_params = list(data_path = data_path),
   output_format  = "html",
   output_file = output_file

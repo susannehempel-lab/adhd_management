@@ -33,6 +33,19 @@ library(knitr)
 library(kableExtra)
 library(metafor)
 
+#| label: init
+
+# Debug: Print the path to the console during rendering
+message("--- Debug: Attempting to load from path: ", params$data_path, " ---")
+
+if (exists("params") && !is.null(params$data_path) && params$data_path != "") {
+  # Safe check to see if the file actually exists from Quarto's perspective
+  if (file.exists(params$data_path)) {
+    load(params$data_path)
+  } else {
+    stop("The file path was passed, but the file does not exist at: ", params$data_path)
+  }
+}
 
 
 # Load using the absolute path passed from the main script
