@@ -1,6 +1,7 @@
 # This file exists to render the qmd file.
 # This is done for the subgroup analysis
 library(dplyr)
+library(here)
 library(quarto)
 
 # This tells the metareg functions whether to do comparator vs int or control
@@ -8,20 +9,30 @@ library(quarto)
 # Probably should be false
 comparator_vs_int <- FALSE
 
-# Also change computer name in analysis*.qmd file
-computer <- "susanne"
 
-if (!computer %in% tolower(c("susanne", "jeremy"))) {
-  stop("Computer must be one of 'susanne', 'jeremy'")
-}
+git_root <- glue::glue(
+  "https://github.com/susannehempel-lab/adhd_management/raw/refs/",
+  "heads/main"
+  )
+
+data_location <- 
+  file.path(
+    git_root, "data/adhd_management_data.csv"
+  )
+
+qmd_url <- file.path(git_root, "adhd_management.qmd")
 
 
-if (computer == "susanne") {
-  root_dir <- "C:/Users/SusanneH/OneDrive - University of Southern California/Susanne/USC/ADHD adults"  
-}
-if (computer == "jeremy") {
-  root_dir <- "d:/documents/adhd"
-}
+# Download the qmd file so Quarto can find it
+qmd_location <- tempfile(fileext = ".qmd")
+download.file(url = qmd_url, destfile = qmd_location, mode = "wb")
+
+
+
+
+d <- read.csv(data_location)
+
+
 
 subgroup <- ""
 # If running a subgroup analysis, put variable name here or leave blank
@@ -43,14 +54,6 @@ subgroup <- ""
 # subgroup <- "CBT_only"
 # subgroup <- "DBT_only"
 # subgroup <- "MBCT_only"
-
-setwd(file.path(root_dir, "Analysis"))
-
-d <- read.csv(
-  file.path(
-    root_dir, 
-    "Data/distillersr-AHRQ_Adult_ADHD_Diagnosis_and_Treatment_USC_2026-03-30-03-52-40.csv")
-)
 
 
 # temporary fix because create a variable called comparator, and the data 
@@ -106,7 +109,7 @@ if (comparator_vs_int) {
 }
 
 quarto::quarto_render(
-  "analysis_2025-06-05.qmd", output_format  = "html",
+  qmd_location, output_format  = "html",
   output_file = output_file
 )
 
@@ -128,7 +131,7 @@ if (comparator_vs_int) {
 }
 
 quarto::quarto_render(
-  "analysis_2025-06-05.qmd", output_format  = "html",
+  qmd_location, output_format  = "html",
   output_file = output_file
 )
 
@@ -147,7 +150,7 @@ if (comparator_vs_int) {
 }
 
 quarto::quarto_render(
-  "analysis_2025-06-05.qmd", output_format  = "html",
+  qmd_location, output_format  = "html",
   output_file = output_file
 )
 
@@ -177,7 +180,7 @@ d <- d %>%
 save.image("data.RData")
 
 quarto::quarto_render(
-  "analysis_2025-06-05.qmd", output_format  = "html",
+  qmd_location, output_format  = "html",
   output_file = 
     output_file
 )

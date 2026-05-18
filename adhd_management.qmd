@@ -8,16 +8,12 @@ format:
 
 
 # ADHD Analysis
-Need to change working directory.
+
 ```{r setup_height}
 
 figure_height <- 10
 
-computer <- "susanne"
 
-if (!computer %in% tolower(c("susanne", "jeremy"))) {
-  stop("Computer must be one of 'susanne', 'jeremy'")
-}
 
 ```
 
@@ -35,13 +31,6 @@ library(knitr)
 library(kableExtra)
 library(metafor)
 
-
-if (computer == "susanne") {
-  root_dir <- "C:/Users/SusanneH/OneDrive - University of Southern California/Susanne/USC/ADHD adults/Analysis"  
-}
-if (computer == "jeremy") {
-  root_dir <- "d:/documents/adhd/analysis"
-}
 
 
 load("data.RData")
