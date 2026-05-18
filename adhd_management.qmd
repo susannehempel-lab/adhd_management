@@ -170,15 +170,17 @@ d <-  d %>%
 
 Read the functions to do MA:
 
-```{r}
+```{r read_functions}
 
-source(file.path(git_raw_root, "helper_functions/AmphMphMetareg.R"))
-source(file.path(git_raw_root, "helper_functions/CatMA.R"))
-source(file.path(git_raw_root, "helper_functions/CombinedMetaregs.R"))
-source(file.path(git_raw_root, "helper_functions/ContMA.R"))
-source(file.path(git_raw_root, "helper_functions/MPH_Dose_metareg.R"))
-source(file.path(git_raw_root, "helper_functions/StimMetaReg.R"))
+source(glue::glue(git_raw_root, "/helper_functions/AmphMphMetaReg.R"))
+source(glue::glue(git_raw_root, "/helper_functions/CatMA.R"))
+source(glue::glue(git_raw_root, "/helper_functions/CombinedMetaregs.R"))
+source(glue::glue(git_raw_root, "/helper_functions/contMA.R"))
+source(glue::glue(git_raw_root, "/helper_functions/MPH_Dose_metareg.R"))
+source(glue::glue(git_raw_root, "/helper_functions/StimMetaReg.R"))
 ```
+
+
 
 ```{r}
 #| results: 'asis'
