@@ -14,6 +14,10 @@ git_root <- glue::glue(
   "https://github.com/susannehempel-lab/adhd_management/raw/refs/",
   "heads/main"
   )
+git_raw_root <- glue::glue(
+  "https://raw.githubusercontent.com/susannehempel-lab/adhd_management/refs/heads/main"
+)
+
 
 data_location <- 
   file.path(

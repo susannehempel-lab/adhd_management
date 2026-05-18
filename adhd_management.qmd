@@ -17,7 +17,7 @@ figure_height <- 10
 
 ```
 
-```{r}
+```{r init}
 #| results: 'asis'
 #| fig-width: 8
 #| fig-height: !expr figure_height
@@ -172,12 +172,12 @@ Read the functions to do MA:
 
 ```{r}
 
-source(file.path(root_dir, "analysis/ContMA.R"))
-source(file.path(root_dir, "analysis/CatMA.R"))
-source(file.path(root_dir, "analysis/StimMetaReg.R"))
-source(file.path(root_dir, "analysis/CombinedMetaregs.R"))
-source(file.path(root_dir, "analysis/AmphMphMetareg.R"))
-source(file.path(root_dir, "analysis/MPH_Dose_metareg.R"))
+source(file.path(git_raw_root, "helper_functions/AmphMphMetareg.R"))
+source(file.path(git_raw_root, "helper_functions/CatMA.R"))
+source(file.path(git_raw_root, "helper_functions/CombinedMetaregs.R"))
+source(file.path(git_raw_root, "helper_functions/ContMA.R"))
+source(file.path(git_raw_root, "helper_functions/MPH_Dose_metareg.R"))
+source(file.path(git_raw_root, "helper_functions/StimMetaReg.R"))
 ```
 
 ```{r}
