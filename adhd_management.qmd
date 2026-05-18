@@ -53,6 +53,11 @@ if (params$data_path != "") {
   load(params$data_path)
 }
 
+```
+
+
+```{r process_data}
+
 
 # Remove empty intervention
 d <- d %>% dplyr::filter(intervention != "")
