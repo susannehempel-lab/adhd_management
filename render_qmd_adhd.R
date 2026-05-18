@@ -102,9 +102,8 @@ if (subgroup != "") {
 }
 
 
-
-save.image("data.RData")
-
+data_path <- file.path(getwd(), "data.RData")
+save.image(file = data_path)
 
 output_file <- glue::glue("adhd_management_{subgroup}.html")
 
@@ -113,7 +112,9 @@ if (comparator_vs_int) {
 }
 
 quarto::quarto_render(
-  qmd_location, output_format  = "html",
+  qmd_location, 
+  execute_params = list(data_path = data_path),
+  output_format  = "html",
   output_file = output_file
 )
 

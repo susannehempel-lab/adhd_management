@@ -33,7 +33,10 @@ library(metafor)
 
 
 
-load("data.RData")
+# Load using the absolute path passed from the main script
+if (params$data_path != "") {
+  load(params$data_path)
+}
 
 
 # Remove empty intervention
