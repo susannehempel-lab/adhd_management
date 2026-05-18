@@ -3,39 +3,18 @@
 library(dplyr)
 library(here)
 library(quarto)
+library(glue)
 
 # This tells the metareg functions whether to do comparator vs int or control
 # vs int (the default) TRUE vs FALSE
 # Probably should be false
 comparator_vs_int <- FALSE
 
-
-git_root <- glue::glue(
-  "https://github.com/susannehempel-lab/adhd_management/raw/refs/",
-  "heads/main"
-  )
-git_raw_root <- glue::glue(
-  "https://raw.githubusercontent.com/susannehempel-lab/adhd_management/refs/heads/main"
-)
-
-
-data_location <- 
-  file.path(
-    git_root, "data/adhd_management_data.csv"
-  )
-
 git_root <- "https://raw.githubusercontent.com/susannehempel-lab/adhd_management/refs/heads/main"
 qmd_url  <- glue("{git_root}/adhd_management.qmd")
-data_path <- file.path(getwd(), "data.RData")
+data_location <- file.path(git_root, "data/adhd_management_data.csv")
 
-shared_data_path <- file.path(getwd(), "adhd_params.RData")
-save.image(file = shared_data_path)
-
-local_qmd_file <- "runtime_adhd_management.qmd"
-
-download.file(url = qmd_url, destfile = local_qmd_file, mode = "wb")
-
-
+# 1. Download the data frame first
 d <- read.csv(data_location)
 
 
@@ -103,23 +82,26 @@ if (subgroup != "") {
   d <- d[keep, ]
 }
 
+# Save the workspace AFTER data 'd' has been fully processed
+shared_data_path <- file.path(getwd(), "adhd_params.RData")
+save.image(file = shared_data_path)
 
+# Set a local, static file destination 
+local_qmd_file <- "runtime_adhd_management.qmd"
+download.file(url = qmd_url, destfile = local_qmd_file, mode = "wb")
 
+# Set up output file name strings
 output_file <- glue::glue("adhd_management_{subgroup}.html")
-
-
-
-output_file <- glue::glue("adhd_management_{subgroup}.html")
-
 if (comparator_vs_int) {
   output_file <- glue::glue("analysis_management_comparator_{subgroup}.html")
 }
 
+#  Render using local_qmd_file and pass shared_data_path
 quarto::quarto_render(
-  input = qmd_location, 
-  execute_params = list(data_path = data_path),
+  input          = local_qmd_file,     # Changed from qmd_location
+  execute_params = list(data_path = shared_data_path), # Changed from data_path
   output_format  = "html",
-  output_file = output_file
+  output_file    = output_file
 )
 
 
@@ -129,7 +111,7 @@ quarto::quarto_render(
 d_orig <- d
 d <- d %>% dplyr::filter(study.design == "RCT")
 
-save.image("data.RData")
+save.image(file = shared_data_path)
 
 output_file <- glue::glue("adhd_management_RCT_only_{subgroup}.html")
 
@@ -140,8 +122,10 @@ if (comparator_vs_int) {
 }
 
 quarto::quarto_render(
-  qmd_location, output_format  = "html",
-  output_file = output_file
+  input          = local_qmd_file,     # Changed from qmd_location
+  execute_params = list(data_path = shared_data_path), # Changed from data_path
+  output_format  = "html",
+  output_file    = output_file
 )
 
 ### Remove high Risk of Bias Studies ########################
@@ -149,7 +133,7 @@ quarto::quarto_render(
 d <- d_orig
 d <- d %>% dplyr::filter(RoB != "High risk")
 
-save.image("data.RData")
+save.image(file = shared_data_path)
 
 output_file <- glue::glue("adhd_management_no_high_RoB_{subgroup}.html")
 
@@ -159,8 +143,10 @@ if (comparator_vs_int) {
 }
 
 quarto::quarto_render(
-  qmd_location, output_format  = "html",
-  output_file = output_file
+  input          = local_qmd_file,     # Changed from qmd_location
+  execute_params = list(data_path = shared_data_path), # Changed from data_path
+  output_format  = "html",
+  output_file    = output_file
 )
 
 
@@ -186,12 +172,13 @@ d <- d %>%
     comp_stimulant == "comp_stimulant" &
       int_nonstimulant == "int_nonstimulant")
 
-save.image("data.RData")
+save.image(file = shared_data_path)
 
 quarto::quarto_render(
-  qmd_location, output_format  = "html",
-  output_file = 
-    output_file
+  input          = local_qmd_file,     # Changed from qmd_location
+  execute_params = list(data_path = shared_data_path), # Changed from data_path
+  output_format  = "html",
+  output_file    = output_file
 )
 
-
+if (file.exists(local_qmd_file)) file.remove(local_qmd_file)
