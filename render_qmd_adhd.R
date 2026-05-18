@@ -26,12 +26,14 @@ data_location <-
 
 git_root <- "https://raw.githubusercontent.com/susannehempel-lab/adhd_management/refs/heads/main"
 qmd_url  <- glue("{git_root}/adhd_management.qmd")
-data_path <- file.path(getwd(), "your_data_file.RData")
+data_path <- file.path(getwd(), "data.RData")
 
-# 2. Download the QMD file to a temporary location
-qmd_location <- tempfile(fileext = ".qmd")
-download.file(url = qmd_url, destfile = qmd_location, mode = "wb")
+shared_data_path <- file.path(getwd(), "adhd_params.RData")
+save.image(file = shared_data_path)
 
+local_qmd_file <- "runtime_adhd_management.qmd"
+
+download.file(url = qmd_url, destfile = local_qmd_file, mode = "wb")
 
 
 d <- read.csv(data_location)
@@ -106,8 +108,6 @@ if (subgroup != "") {
 output_file <- glue::glue("adhd_management_{subgroup}.html")
 
 
-data_path <- file.path(getwd(), "data.RData")
-save.image(file = data_path)
 
 output_file <- glue::glue("adhd_management_{subgroup}.html")
 
