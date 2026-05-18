@@ -102,14 +102,12 @@ if (subgroup != "") {
 }
 
 
-my_local_data_path <- file.path(getwd(), "adhd_params.RData")
-save.image(file = my_local_data_path)
 
 output_file <- glue::glue("adhd_management_{subgroup}.html")
 
 
-my_local_data_path <- file.path(getwd(), "adhd_params.RData")
-save.image(file = my_local_data_path)
+data_path <- file.path(getwd(), "data.RData")
+save.image(file = data_path)
 
 output_file <- glue::glue("adhd_management_{subgroup}.html")
 

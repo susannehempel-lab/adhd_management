@@ -22,7 +22,7 @@ figure_height <- 10
 ```{r init}
 #| results: 'asis'
 #| fig-width: 8
-#| fig-height: !expr figure_height
+
 
 # ADHD Analysis 2025-04-23
 library(broom)
