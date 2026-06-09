@@ -1,0 +1,570 @@
+---
+title: "ADHD management"
+format:
+  html:
+    embed-resources: true
+    toc: true
+params:
+  data_path: ""    
+---
+
+
+# ADHD Analysis
+
+```{r setup_height}
+
+figure_height <- 10
+
+
+
+```
+
+```{r init}
+#| results: 'asis'
+#| fig-width: 8
+
+
+# ADHD Analysis 2025-04-23
+library(broom)
+library(dplyr)
+library(glue)
+library(htmltools)
+library(knitr)
+library(kableExtra)
+library(metafor)
+
+#| label: init
+
+# Debug: Print the path to the console during rendering
+message("--- Debug: Attempting to load from path: ", params$data_path, " ---")
+
+if (exists("params") && !is.null(params$data_path) && params$data_path != "") {
+  # Safe check to see if the file actually exists from Quarto's perspective
+  if (file.exists(params$data_path)) {
+    load(params$data_path)
+  } else {
+    stop("The file path was passed, but the file does not exist at: ", params$data_path)
+  }
+}
+
+
+# Load using the absolute path passed from the main script
+if (params$data_path != "") {
+  load(params$data_path)
+}
+
+```
+
+
+```{r process_data}
+
+
+# Remove empty intervention
+d <- d %>% dplyr::filter(intervention != "")
+
+
+# find the continuous variable intervention names
+int_continuous_vars <- 
+  d %>% 
+  dplyr::select(ends_with("mean_int_cont")) %>% 
+  names() %>%
+  gsub("_.+", "", .)
+
+ctrl_continuous_vars <- 
+  d %>% 
+  dplyr::select(ends_with("mean_ctrl_cont")) %>% 
+  names() %>%
+  gsub("_.+", "", .)
+
+
+
+list_variable_types <-
+  list(
+    c(var = "functional", type = "continuous"),
+    c(var = "functional", type = "categorical"),
+    c(var = "cognitive", type = "continuous"),
+    c(var = "cognitive", type = "categorical"),
+    c(var = "symptom", type = "continuous"),
+    c(var = "symptom", type = "categorical"),
+    c(var = "substance_use", type = "continuous"),
+    c(var = "substance_use", type = "categorical"),
+    c(var = "relationship", type = "continuous"),
+    c(var = "relationship", type = "categorical"),
+    c(var = "BP", type = "continuous"),
+    c(var = "BP", type = "categorical"),
+    c(var = "sleep_disturbance", type = "continuous"),
+    c(var = "sleep_disturbance", type = "categorical"),
+    c(var = "AEs", type = "continuous"),
+    c(var = "AEs", type = "categorical"),
+    c(var = "mortality", type = "continuous"),
+    c(var = "mortality", type = "categorical"),    
+    c(var = "behavior", type = "continuous"),
+    c(var = "behavior", type = "categorical"),
+    c(var = "appetite", type = "continuous"),
+    c(var = "appetite", type = "categorical"),
+    c(var = "mood", type = "continuous"),
+    c(var = "mood", type = "categorical")
+  )
+
+
+int_continuous_vars <- 
+  ifelse(int_continuous_vars == "substance", 
+         "substance_use", 
+         int_continuous_vars
+  ) 
+int_continuous_vars <- 
+  ifelse(int_continuous_vars == "sleep", 
+         "sleep_disturbance", 
+         int_continuous_vars
+  ) 
+
+if (length(int_continuous_vars) != length(ctrl_continuous_vars)) {
+  stop("Problem with continuous variables")
+}
+
+
+
+# find the categorical variable outcome names
+int_categ_vars <- 
+  d %>% 
+  dplyr::select(ends_with("int_categ")) %>% 
+  names() %>%
+  gsub("_.+", "", .) %>% 
+  unique()
+
+ctrl_categ_vars <- 
+  d %>% 
+  dplyr::select(ends_with("ctrl_categ")) %>% 
+  names() %>%
+  gsub("_.+", "", .) %>% 
+  unique()
+
+int_categ_vars <- 
+  ifelse(int_categ_vars == "substance", "substance_use", int_categ_vars) 
+int_categ_vars <- 
+  ifelse(int_categ_vars == "sleep", "sleep_disturbance", int_categ_vars) 
+
+if (length(int_categ_vars) != length(ctrl_categ_vars)) {
+  stop("Problem with continuous variables")
+}
+
+# need to rename substance to substance_use
+
+
+# Check the direction for each outcome that we want for the effects and 
+# forest plots.
+# Variable says what we want on the right hand side of the x-axis.
+# e.g. blood pressure lower <-----> higher,
+# cognitive higher <---------> lower
+d <-  d %>% 
+  dplyr::mutate(
+    # continuous directions 
+    AEs_positive_direction = "higher",
+    appetite_positive_direction =  "higher",   ######### Check
+    behavior_positive_direction = "lower",
+    BP_positive_direction = "higher",
+    cognitive_positive_direction = "lower",
+    functional_positive_direction = "higher",
+    mood_positive_direction = "higher",   ######### Check
+    mortality_positive_direction = "lower",
+    relationship_positive_direction = "higher",
+    sleep_disturbance_positive_direction = "higher",
+    substance_use_positive_direction = "lower",
+    symptom_positive_direction = "higher",
+    # categorical
+    AEs_positive_direction_categ = "higher",
+    appetite_positive_direction_categ = "lower",
+    behavior_positive_direction_categ = "lower",
+    BP_positive_direction_categ = "lower",
+    cognitive_positive_direction_categ = "higher", 
+    functional_positive_direction_categ = "lower",
+    mood_positive_direction_categ = "lower",     # check
+    mortality_positive_direction_categ = "lower",
+    relationship_positive_direction_categ = "lower",
+    sleep_disturbance_positive_direction_categ = "higher",
+    substance_use_positive_direction_categ = "higher",
+    symptom_positive_direction_categ = "higher"
+  )
+
+
+
+
+```
+
+Read the functions to do MA:
+
+```{r read_functions}
+
+source(glue::glue(git_raw_root, "/helper_functions/AmphMphMetaReg.R"))
+source(glue::glue(git_raw_root, "/helper_functions/CatMA.R"))
+source(glue::glue(git_raw_root, "/helper_functions/CombinedMetaregs.R"))
+source(glue::glue(git_raw_root, "/helper_functions/contMA.R"))
+source(glue::glue(git_raw_root, "/helper_functions/MPH_Dose_metareg.R"))
+source(glue::glue(git_raw_root, "/helper_functions/StimMetaReg.R"))
+```
+
+
+
+```{r}
+#| results: 'asis'
+#| fig-width: 8
+#| fig-height: !expr figure_height
+
+d <- d %>%
+  dplyr::mutate(
+    symptom_SD_ctrl_cont = ifelse(symptom_SD_ctrl_cont  < 0, NA, symptom_SD_ctrl_cont),
+    symptom_SD_int_cont = ifelse(symptom_SD_int_cont  < 0, NA, symptom_SD_int_cont),
+  )
+
+
+```
+
+# All interventions 
+
+```{r all_interventions}
+#| results: 'asis'
+#| #| fig-width: 8
+#| fig-height: !expr figure_height
+
+
+for (var_num in 1:length(list_variable_types)) {
+  current_intervention <- ""
+  outcome_name <- list_variable_types[[var_num]]["var"]
+  outcome_type <- list_variable_types[[var_num]]["type"]
+  
+  cat(
+    glue::glue("<h2> Intervention: All Interventions <br> 
+                <h3>Outcome: {outcome_name}:{outcome_type}</h3><p>")
+  )
+  
+  if (outcome_type == "continuous") {
+    res <- ContMA(
+      data = d,
+      label = "ID",
+      outcome = outcome_name,
+      comparator_vs_int = comparator_vs_int
+    ) 
+  }
+  if (outcome_type == "categorical") {
+    res <- CatMA(
+      data = d,
+      label = "ID",
+      outcome = outcome_name,
+      comparator_vs_int = comparator_vs_int
+    )
+  }
+}
+
+```
+
+
+# Break down by interventions
+
+```{r by_intervention}
+#| results: 'asis'
+#| fig-width: 8
+#| fig-height: !expr figure_height
+
+if (subgroup == "") {
+  for (current_intervention in sort(unique(d$intervention))) {
+    cat(glue::glue("<h1> Intervention: {current_intervention}</h1> "))
+    cat("xxxxxxx")    
+    medication_analysis <- current_intervention == "Medication"
+    # If current_intervention is medication, we're going to also use 
+    # comparator as an intervention group, as long as the intervention is not
+    # also medication
+    # if doing medication analysis, we also want medication in comparator
+    if (!medication_analysis) {
+      d_short <- d %>%
+        dplyr::filter(
+          intervention == current_intervention | 
+            comparator == current_intervention, 
+        )
+    } else {
+      d_short <- d %>%
+        dplyr::filter(
+          intervention == current_intervention | 
+            comparator == current_intervention, 
+        )
+    }
+    
+    for (var_num in 1:length(list_variable_types)) {
+      
+      outcome_name <- list_variable_types[[var_num]]["var"]
+      outcome_type <- list_variable_types[[var_num]]["type"]
+      
+      cat(
+        glue::glue(
+          "<h3>Outcome: {outcome_name}:{outcome_type} 
+          Intervention: {current_intervention}</h3><p>")
+      )
+      
+      if (outcome_type == "continuous") {
+        res <- ContMA(
+          data = d_short,
+          label = "ID",
+          outcome = outcome_name,
+          comparator_vs_int = comparator_vs_int
+        ) 
+      }
+      if (outcome_type == "categorical") {
+        print(glue::glue("Outcome name: {outcome_name}"))
+#        if (outcome_name == "symptom" & current_intervention == "cognitive") {
+#          stop("Got to cog cat")
+#        }
+        res <- CatMA(
+          data = d_short,
+          label = "ID",
+          outcome = outcome_name,
+          comparator_vs_int = comparator_vs_int,
+          medication_analysis = medication_analysis
+        )
+
+      }
+    }
+  }
+}
+
+```
+
+# Subintervention  Analysis
+Perform meta-analyses separately for MPH, AMPH, and NRI's on ADHD symptoms, cognitive performance, and adverse events (p.28)? Reviewers and readers will absolutely expect and want it.
+
+int_methylphenidate
+int_amphetamine
+int_NRI
+
+•	Perform meta-analyses separately for MBCT, DBT, and CBT on ADHD symptoms (p.33)?
+- int_mindfulness
+- int_DBT
+- int_CBT_only
+
+
+Continuous Outcomes:
+- cognitive  symptom AEs
+Categorical outcomes:
+- cognitive symptom AEs
+
+
+```{r mph_amph_nri}
+#| results: 'asis'
+#| fig-width: 8
+#| fig-height: !expr figure_height
+
+#Only doing specific interventions, and only specific outcomes.
+
+
+
+sub_interventions <- 
+  c("longterm", 
+    "int_stimulant", "int_nonstimulant", 
+    "int_methylphenidate", "int_amphetamine", 
+    "int_NRI", "int_alpha_agonist", "int_atomoxetine",
+    "int_bupropion", 
+    "int_mindfulness", "int_DBT_only", "int_CBT_only", "int_MBCT_only"
+    )
+
+
+rm(d_short)
+
+for (current_intervention in sort(unique(sub_interventions))) {
+
+  medication_analysis <- FALSE
+  if (current_intervention %in% 
+      c("int_methylphenidate", "int_amphetamine", "int_NRI",
+        "int_stimulant",
+        "int_nonstimulant")) {
+    medication_analysis <- TRUE
+  }
+  
+  d_short <- d[d[current_intervention] == current_intervention, ]
+  
+  medication_analysis <- FALSE
+  if (current_intervention %in% 
+      c("int_methylphenidate", "int_amphetamine", "int_NRI",
+        "int_stimulant",
+        "int_nonstimulant")) {
+    medication_analysis <- TRUE
+  }
+  
+  
+  cat(glue::glue("<h2> MPH, AMPH, and NRI's Section: 
+                 Intervention: {current_intervention}</h2> "))
+  for (var_num in 1:length(list_variable_types)) {
+    
+    outcome_name <- list_variable_types[[var_num]]["var"]
+    outcome_type <- list_variable_types[[var_num]]["type"]
+    
+    cat(
+      glue::glue("<h2> Intervention: {current_intervention} <br> 
+                <h3>Outcome: {outcome_name}:{outcome_type}</h3><p>")
+    )
+    
+    if (outcome_type == "continuous") {
+      res <- ContMA(
+        data = d_short,
+        label = "ID",
+        outcome = outcome_name,
+        comparator_vs_int = comparator_vs_int
+      ) 
+    }
+    if (outcome_type == "categorical") {
+      res <- CatMA(
+        data = d_short,
+        label = "ID",
+        outcome = outcome_name,
+        comparator_vs_int = comparator_vs_int
+      )
+    }
+  }
+}  
+
+rm(d_short)
+
+```
+
+
+# atomoxetine vs methylphenidate
+
+
+```{r atom_vs_meth}
+#| results: 'asis'
+#| fig-width: 8
+#| fig-height: !expr figure_height
+
+
+d_short <- d %>%
+  dplyr::filter(
+    (int_methylphenidate == "int_methylphenidate" & comp_atomoxetine == "comp_atomoxetine") |
+      (comp_methylphenidate == "comp_methylphenidate" & int_atomoxetine == "int_atomoxetine")
+  )
+nrow(d_short)
+
+
+d_short %>% dplyr::group_by(
+  comp_methylphenidate, int_atomoxetine,
+  comp_atomoxetine,  int_methylphenidate
+) %>% dplyr::summarise(n_studies = dplyr::n()) %>%
+  as.data.frame() %>% 
+  knitr::kable()
+
+current_intervention <- "Atomoxetine vs Methylphenidate"
+
+cat(glue::glue("There are three studies for methylphenidate, and in each study 
+int is atomoxetine, and comp is always methylphenidate. That
+means we don't need to do difficult swaps, but we need to 
+remember that comp is methylphenidate") )
+
+
+
+
+#Only doing specific interventions, and only specific outcomes.
+
+medication_analysis <- FALSE
+
+
+cat(glue::glue("<h2> MPH, AMPH, and NRI's Section: 
+                 Intervention: {current_intervention}</h2> "))
+for (var_num in 1:length(list_variable_types)) {
+  
+  outcome_name <- list_variable_types[[var_num]]["var"]
+  outcome_type <- list_variable_types[[var_num]]["type"]
+  
+  cat(
+    glue::glue("<h2> Intervention: {current_intervention} <br> 
+                <h3>Outcome: {outcome_name}:{outcome_type}</h3><p>")
+  )
+  
+  if (outcome_type == "continuous") {
+    res <- ContMA(
+      data = d_short,
+      label = "ID",
+      outcome = outcome_name,
+      comparator_vs_int = TRUE
+    ) 
+  }
+  if (outcome_type == "categorical") {
+    res <- CatMA(
+      data = d_short,
+      label = "ID",
+      outcome = outcome_name,
+      comparator_vs_int = TRUE
+    )
+  }
+}
+
+```
+
+
+
+
+
+# amphetamine  vs methylphenidate
+
+```{r amph_vs_meth}
+#| results: 'asis'
+#| fig-width: 8
+#| fig-height: !expr figure_height
+
+
+d_short <- d %>%
+  dplyr::filter(
+    (int_methylphenidate == "int_methylphenidate" & comp_atomoxetine == "comp_amphetamine") |
+      (comp_methylphenidate == "comp_methylphenidate" & int_atomoxetine == "int_atomoxetine")
+  )
+nrow(d_short)
+
+
+d_short %>% dplyr::group_by(
+  comp_methylphenidate, int_atomoxetine,
+  comp_atomoxetine,  int_methylphenidate
+) %>% dplyr::summarise(n_studies = dplyr::n()) %>%
+  as.data.frame() %>% 
+  knitr::kable()
+
+current_intervention <- "Atomoxetine vs Methylphenidate"
+
+cat(glue::glue("There are three studies for methylphenidate, and in each study 
+int is atomoxetine, and comp is always methylphenidate. That
+means we don't need to do difficult swaps, but we need to 
+remember that comp is methylphenidate") )
+
+#Only doing specific interventions, and only specific outcomes.
+medication_analysis <- FALSE
+
+cat(glue::glue("<h2> MPH, AMPH, and NRI's Section: 
+                 Intervention: {current_intervention}</h2> "))
+for (var_num in 1:length(list_variable_types)) {
+  
+  outcome_name <- list_variable_types[[var_num]]["var"]
+  outcome_type <- list_variable_types[[var_num]]["type"]
+  
+  cat(
+    glue::glue("<h2> Intervention: {current_intervention} <br> 
+                <h3>Outcome: {outcome_name}:{outcome_type}</h3><p>")
+  )
+  
+  if (outcome_type == "continuous") {
+    res <- ContMA(
+      data = d_short,
+      label = "ID",
+      outcome = outcome_name,
+      comparator_vs_int = TRUE
+    ) 
+  }
+  if (outcome_type == "categorical") {
+    res <- CatMA(
+      data = d_short,
+      label = "ID",
+      outcome = outcome_name,
+      comparator_vs_int = TRUE
+    )
+  }
+}
+
+```
+
+
+
+
+

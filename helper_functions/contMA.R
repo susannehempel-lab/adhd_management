@@ -54,22 +54,23 @@ ContMA <- function(
   # If doing medication analysis, and intervention is not medication, copy
   # medication values into intervention
   
-  data <- data %>%
-    dplyr::mutate(
-      mean_int_cont = ifelse(
-        intervention != current_intervention & 
-          comparator == current_intervention, 
-        mean_comp_cont, mean_int_cont),
-      SD_int_cont = ifelse(
-        intervention != current_intervention & 
-          comparator == current_intervention, 
-        SD_comp_cont, SD_int_cont),
-      n_int_cont = ifelse(
-        intervention != current_intervention & 
-          comparator == current_intervention, 
-        n_comp_cont, n_int_cont)
-    )
-  
+  if (intervention != "") {
+    data <- data %>%
+      dplyr::mutate(
+        mean_int_cont = ifelse(
+          intervention != current_intervention & 
+            comparator == current_intervention, 
+          mean_comp_cont, mean_int_cont),
+        SD_int_cont = ifelse(
+          intervention != current_intervention & 
+            comparator == current_intervention, 
+          SD_comp_cont, SD_int_cont),
+        n_int_cont = ifelse(
+          intervention != current_intervention & 
+            comparator == current_intervention, 
+          n_comp_cont, n_int_cont)
+      )
+  }
   
   
   # if we are doing a subgroup analysis, we need to check if the subgroup

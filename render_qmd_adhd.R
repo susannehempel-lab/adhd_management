@@ -10,9 +10,9 @@ library(glue)
 # Probably should be false
 comparator_vs_int <- FALSE
 
-git_root <- "https://raw.githubusercontent.com/susannehempel-lab/adhd_management/refs/heads/main"
-qmd_url  <- glue("{git_root}/adhd_management.qmd")
-data_location <- file.path(git_root, "data/adhd_management_data.csv")
+git_raw_root <- "https://raw.githubusercontent.com/susannehempel-lab/adhd_management/refs/heads/main"
+qmd_url  <- glue("{git_raw_root}/adhd_management.qmd")
+data_location <- file.path(git_raw_root, "data/adhd_management_data.csv")
 
 # 1. Download the data frame first
 d <- read.csv(data_location)
