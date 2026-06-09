@@ -86,6 +86,8 @@ if (subgroup != "") {
 shared_data_path <- file.path(getwd(), "adhd_params.RData")
 save.image(file = shared_data_path)
 
+Sys.sleep(5)
+
 # Set a local, static file destination 
 local_qmd_file <- "runtime_adhd_management.qmd"
 download.file(url = qmd_url, destfile = local_qmd_file, mode = "wb")
@@ -181,4 +183,4 @@ quarto::quarto_render(
   output_file    = output_file
 )
 
-if (file.exists(local_qmd_file)) file.remove(local_qmd_file)
+# if (file.exists(local_qmd_file)) file.remove(local_qmd_file)
