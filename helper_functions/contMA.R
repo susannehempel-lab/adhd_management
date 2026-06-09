@@ -4,7 +4,7 @@ ContMA <- function(
     data,
     label = "ID",
     outcome,
-    comparator_analysis = TRUE, 
+    comparator_analysis = FALSE, 
     comparator_vs_int = FALSE,
     medication_analysis = FALSE  # if medication is TRUE, move comp to int
 ) {
