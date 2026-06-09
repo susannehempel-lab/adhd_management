@@ -54,7 +54,7 @@ ContMA <- function(
   # If doing medication analysis, and intervention is not medication, copy
   # medication values into intervention
   
-  if (intervention != "") {
+  if (current_intervention != "") {
     data <- data %>%
       dplyr::mutate(
         mean_int_cont = ifelse(
