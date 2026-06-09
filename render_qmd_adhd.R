@@ -10,7 +10,7 @@ library(glue)
 # Probably should be false
 comparator_vs_int <- FALSE
 
-git_root <- "https://raw.githubusercontent.com/susannehempel-lab/adhd_management/refs/heads/main"
+git_raw_root <- "https://raw.githubusercontent.com/susannehempel-lab/adhd_management/refs/heads/main"
 qmd_url  <- glue("{git_root}/adhd_management.qmd")
 data_location <- file.path(git_root, "data/adhd_management_data.csv")
 
@@ -33,7 +33,7 @@ subgroup <- ""
 # subgroup <- "S"
 # subgroup <- "NS"
 # subgroup <- "MPH"
-# subgroup <- "AMPH"
+subgroup <- "AMPH"
 # subgroup <- "bupropion"
 # subgroup <- "atomoxetine"
 # subgroup <- "CBT_only"
