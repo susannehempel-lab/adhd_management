@@ -18,7 +18,6 @@ data_location <- file.path(git_raw_root, "data/adhd_management_data.csv")
 d <- read.csv(data_location)
 
 
-
 subgroup <- ""
 # If running a subgroup analysis, put variable name here or leave blank
 # The intervention subtypes int_stimulant, comp_stimulant, int_methylphenidate, int_amphetamine 
