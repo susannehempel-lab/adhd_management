@@ -25,19 +25,18 @@ CatMA <- function(
   
   # if doing medication analysis, copy the comp numbers into int, if 
   # intervention is not categorical.
-  
-
-  data[[n_int_categ]] <-
-    ifelse(
-      data$intervention != current_intervention & 
-        data$comparator == current_intervention, 
-      data[[n_comp_categ]], data[[n_int_categ]])
-  data[[counts_int_categ]] <-
-    ifelse(
-      data$intervention != current_intervention & 
-        data$comparator == current_intervention, 
-      data[[counts_comp_categ]], data[[counts_int_categ]])
-  
+  if (medication_analysis) {
+    data[[n_int_categ]] <-
+      ifelse(
+        data$intervention != current_intervention & 
+          data$comparator == current_intervention, 
+        data[[n_comp_categ]], data[[n_int_categ]])
+    data[[counts_int_categ]] <-
+      ifelse(
+        data$intervention != current_intervention & 
+          data$comparator == current_intervention, 
+        data[[counts_comp_categ]], data[[counts_int_categ]])
+  }
   
   
   data$ai <- data[[counts_ctrl_categ]]
